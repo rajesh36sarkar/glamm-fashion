@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Glamm Fashion | Wear The Elegant</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Chart.js for admin charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/sections.css">
+<link rel="stylesheet" href="assets/css/admin.css">
+<link rel="stylesheet" href="assets/css/responsive.css">
+<link rel="stylesheet" href="assets/css/custom.css">
+</head>
+<body>
+
+<!-- Preloader Section -->
+<div id="preloader">
+  <div class="preloader-content">
+    
+    <!-- Background Light Swoosh -->
+    <div class="glowing-swoosh"></div>
+
+    <!-- Sparkling Stars -->
+    <div class="sparkles">
+      <span class="sparkle s1"></span>
+      <span class="sparkle s2"></span>
+      <span class="sparkle s3"></span>
+      <span class="sparkle s4"></span>
+      <span class="sparkle s5"></span>
+    </div>
+
+    <!-- Brand & Tagline -->
+    <h1 class="brand-name">GLAMM FASHION</h1>
+    <p class="tagline">WEAR THE ELEGANT</p>
+
+    <!-- Glowing Countdown Ring -->
+    <div class="countdown-ring">
+      <span id="countdownNumber">100</span>
+    </div>
+
+  </div>
+</div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <span id="toast-msg"></span>
+        <span class="toast-close" id="toast-close">&times;</span>
+    </div>
+
+    <!-- Header placeholder -->
+    <div id="header-placeholder"></div>
+
+    <!-- Main content -->
+    <main id="app-main">
+        <div id="page-content"></div>
+    </main>
+
+    <!-- Footer placeholder -->
+    <div id="footer-placeholder"></div>
+
+    <!-- WhatsApp float -->
+    <a href="https://wa.me/919481605367" class="whatsapp-float" target="_blank" id="whatsapp-float">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <!-- Search modal -->
+    <div class="search-modal" id="search-modal">
+        <div class="search-box">
+            <h3>🔍 Search Products</h3>
+            <p class="sub">Find your favourite jewellery pieces</p>
+            <div class="input-group">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="search-input" placeholder="Type a product name..." />
+                <button id="search-submit">Search</button>
+            </div>
+            <div class="actions">
+                <button class="close-search" id="search-close">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart sidebar -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3>🛒 Your Bag <span id="cart-item-count">0</span></h3>
+            <span class="close-cart" id="cart-close">&times;</span>
+        </div>
+        <div id="cart-items-list"><div class="empty-cart"><i class="fa-regular fa-face-frown"></i>Your bag is empty.</div></div>
+        <div class="cart-total"><span>Total</span><span id="cart-total-price">₹0</span></div>
+        <button class="cart-checkout" id="cart-checkout-btn">Proceed to Checkout →</button>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div class="product-modal-overlay" id="product-modal" style="display:none">
+        <div class="product-modal-box" style="position:relative;">
+            <button class="modal-close" id="modal-close-btn">&times;</button>
+            <div class="modal-image-wrap">
+                <span class="modal-badge" id="modal-badge">Bestseller</span>
+                <!-- Fallback: if placeholder.jpg is missing, show a generated SVG -->
+                <img id="modal-image" 
+                     src="assets/images/placeholder.jpg" 
+                     alt="Product"
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect width=%22200%22 height=%22200%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%22 y=%22115%22 font-family=%22Arial%22 font-size=%2220%22 fill=%22%23999%22%3ENo Image%3C/text%3E%3C/svg%3E'" />
+            </div>
+            <div class="modal-details-wrap">
+                <span class="modal-category" id="modal-category">Rings</span>
+                <h2 id="modal-name">Product Name</h2>
+                <div class="modal-rating">
+                    <span class="stars" id="modal-stars">★★★★★</span>
+                    <span class="count" id="modal-rating-count">(120)</span>
+                </div>
+                <div class="modal-price-box">
+                    <span class="current" id="modal-current-price">₹499</span>
+                    <span class="old" id="modal-old-price">₹899</span>
+                    <span class="discount" id="modal-discount">-45%</span>
+                </div>
+                <div class="modal-description" id="modal-description">
+                    <p>Product description goes here.</p>
+                </div>
+                <div class="modal-meta">
+                    <span><strong>Category:</strong> <span id="modal-meta-category">Rings</span></span>
+                    <span><strong>SKU:</strong> <span id="modal-sku">GLM-001</span></span>
+                </div>
+                <button class="btn-add-cart-modal" id="modal-add-to-cart">
+                    <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div class="admin-modal-overlay" id="admin-modal" style="display:none">
+        <div class="admin-modal-box">
+            <h3 id="admin-modal-title">Add Product</h3>
+            <p class="sub" id="admin-modal-sub">Fill in the details below.</p>
+            <form id="admin-modal-form">
+                <input type="hidden" id="admin-modal-id" />
+                <div class="form-group">
+                    <label for="admin-modal-name">Product Name *</label>
+                    <input type="text" id="admin-modal-name" placeholder="e.g. Rose Gold Ring" required />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="admin-modal-category">Category *</label>
+                        <select id="admin-modal-category" required>
+                            <option value="">Select</option>
+                            <option value="Rings">Rings</option>
+                            <option value="Earrings">Earrings</option>
+                            <option value="Bracelets & Bangles">Bracelets & Bangles</option>
+                            <option value="Pendants & Necklaces">Pendants & Necklaces</option>
+                            <option value="Anklets">Anklets</option>
+                            <option value="Hair Accessories">Hair Accessories</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-modal-price">Price (Rs.) *</label>
+                        <input type="number" id="admin-modal-price" placeholder="499" required min="0" step="1" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="admin-modal-old-price">Original Price (Rs.) <small style="color:#999;">(optional)</small></label>
+                    <input type="number" id="admin-modal-old-price" placeholder="899" min="0" step="1" />
+                </div>
+                <div class="form-group">
+                    <label for="admin-modal-description">Description</label>
+                    <textarea id="admin-modal-description" placeholder="Brief description of the product..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="admin-modal-image">Product Image</label>
+                    <input type="file" id="admin-modal-image" accept="image/*" />
+                    <div class="file-preview" id="admin-modal-image-preview"></div>
+                    <small style="color:#999;">Leave empty to keep existing image.</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="admin-modal-cancel">Cancel</button>
+                    <button type="submit" class="btn-save" id="admin-modal-save">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auth Modal (Login/Signup) -->
+    <div class="auth-modal-overlay" id="auth-modal">
+        <div class="auth-modal-box">
+            <button class="auth-close" id="auth-close">&times;</button>
+            <div id="auth-form-container">
+                <!-- Login Form -->
+                <div id="login-form" class="auth-form active">
+                    <h3>Welcome Back</h3>
+                    <p class="auth-sub">Sign in to your account</p>
+                    <form id="login-form-fields">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="login-email" placeholder="you@example.com" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="login-password" placeholder="••••••••" required />
+                        </div>
+                        <button type="submit" class="auth-btn">Sign In</button>
+                    </form>
+                    <div class="auth-divider"><span>or</span></div>
+                    <button class="auth-google-btn" id="google-login-btn"><i class="fa-brands fa-google"></i> Sign in with Google</button>
+                    <p class="auth-switch">Don't have an account? <a href="#" id="switch-to-signup">Sign Up</a></p>
+                </div>
+                <!-- Signup Form -->
+                <div id="signup-form" class="auth-form">
+                    <h3>Create Account</h3>
+                    <p class="auth-sub">Join Glamm Fashion today</p>
+                    <form id="signup-form-fields">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>First Name</label>
+                                <input type="text" id="signup-firstname" placeholder="Jane" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name</label>
+                                <input type="text" id="signup-lastname" placeholder="Doe" required />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="signup-email" placeholder="you@example.com" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="signup-phone" placeholder="+91 9876543210" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="signup-password" placeholder="••••••••" required minlength="6" />
+                        </div>
+                        <button type="submit" class="auth-btn">Create Account</button>
+                    </form>
+                    <div class="auth-divider"><span>or</span></div>
+                    <button class="auth-google-btn" id="google-signup-btn"><i class="fa-brands fa-google"></i> Sign up with Google</button>
+                    <p class="auth-switch">Already have an account? <a href="#" id="switch-to-login">Sign In</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js",
+    "firebase/storage": "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js",
+    "firebase/functions": "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js"
+  }
+}
+</script>
+<script type="module" src="assets/js/app.js"></script>
+
+</body>
+</html>

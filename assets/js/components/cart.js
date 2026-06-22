@@ -1,3 +1,4 @@
+
 import { formatCurrency } from '../utils/helpers.js';
 
 export function initCart() {

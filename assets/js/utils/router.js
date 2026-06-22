@@ -7,6 +7,7 @@ import { renderDashboard } from '../pages/user-dashboard.js';
 import { renderAdmin } from '../pages/admin.js';
 import { renderCheckout } from '../pages/checkout.js';
 import { renderPolicies } from '../pages/policies.js';
+import { renderTerms } from '../pages/terms.js';   // <-- NEW
 
 const routes = {
   'home': renderHome,
@@ -17,7 +18,8 @@ const routes = {
   'dashboard': renderDashboard,
   'admin': renderAdmin,
   'checkout': renderCheckout,
-  'policies': renderPolicies
+  'policies': renderPolicies,
+  'terms': renderTerms                      // <-- NEW
 };
 
 export function navigateTo(route) {

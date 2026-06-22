@@ -1,19 +1,21 @@
 import { initCart } from './components/cart.js';
 import { renderHeader } from './components/header.js';
-import { renderFooter } from './components/footer.js';
+import { renderFooter } from './components/footer.js';   // import footer
 import { initModal } from './components/modal.js';
 import { handleRoute } from './utils/router.js';
 import { onAuthStateChange } from './services/auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   await renderHeader();
-  renderFooter();
+  renderFooter();        // initial render
   initCart();
   initModal();
   handleRoute();
 
+  // ─── Re‑render header & footer on auth change ───
   onAuthStateChange(() => {
     renderHeader();
+    renderFooter();      // now the footer will show Admin link if user is admin
     handleRoute();
   });
 

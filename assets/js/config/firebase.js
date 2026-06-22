@@ -4,14 +4,14 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 
-// Replace with your Firebase project config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDsHO_ciz01YgLiOQMeahfcApGVrAJpzVw",
+  authDomain: "glamm-fashion-dd870.firebaseapp.com",
+  projectId: "glamm-fashion-dd870",
+  storageBucket: "glamm-fashion-dd870.firebasestorage.app",
+  messagingSenderId: "44898219768",
+  appId: "1:44898219768:web:b29f903d5200075637ad0d",
+  measurementId: "G-4XP22RZ0FS"
 };
 
 const app = initializeApp(firebaseConfig);

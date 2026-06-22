@@ -1,259 +1,236 @@
 import { getCurrentUser } from '../services/auth.js';
 import { createOrder } from '../services/firestore.js';
-import { createPhonePeOrder } from '../services/payment.js';
-
-// We'll load QRCode library dynamically (no need to install)
-let QRCode = null;
+import { formatCurrency } from '../utils/helpers.js';
+import { showToast } from '../components/modal.js';
 
 export async function renderCheckout() {
   const container = document.getElementById('page-content');
   const user = getCurrentUser();
+  const cart = JSON.parse(localStorage.getItem('glamm_cart') || '[]');
 
+  // If not logged in, prompt login
   if (!user) {
     container.innerHTML = `
-      <div class="checkout-login-prompt">
-        <i class="fa-regular fa-circle-user"></i>
-        <h3>Please Login to Checkout</h3>
-        <p>You need to be logged in to place an order.</p>
-        <button class="btn-primary" onclick="window.openAuthModal()">Login / Sign Up</button>
+      <div class="max-w-md mx-auto text-center py-16">
+        <i class="fa-regular fa-circle-user text-5xl text-gray-300"></i>
+        <h3 class="font-heading text-2xl text-maroon mt-4">Please Sign In</h3>
+        <p class="text-gray-500 mb-6">You need to be logged in to place an order.</p>
+        <button id="checkout-login-btn" class="bg-maroon text-white px-6 py-2 rounded-full font-semibold hover:bg-[#5a0c2a] transition">Sign In</button>
       </div>
     `;
+    document.getElementById('checkout-login-btn').addEventListener('click', () => {
+      document.getElementById('auth-modal').classList.add('open');
+    });
     return;
   }
 
-  const cart = JSON.parse(localStorage.getItem('glamm_cart')) || [];
+  // If cart empty
   if (cart.length === 0) {
     container.innerHTML = `
-      <div class="checkout-empty">
-        <i class="fa-regular fa-face-frown"></i>
-        <h3>Your cart is empty</h3>
-        <p>Looks like you haven't added anything yet.</p>
-        <button class="btn-primary" onclick="window.navigateTo('products')">Start Shopping</button>
+      <div class="max-w-md mx-auto text-center py-16">
+        <i class="fa-regular fa-face-frown text-5xl text-gray-300"></i>
+        <h3 class="font-heading text-2xl text-maroon mt-4">Your cart is empty</h3>
+        <p class="text-gray-500 mb-6">Add some beautiful jewellery and come back.</p>
+        <a href="#products" class="bg-maroon text-white px-6 py-2 rounded-full font-semibold hover:bg-[#5a0c2a] transition">Browse Products</a>
       </div>
     `;
     return;
   }
 
+  // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const shipping = subtotal >= 599 ? 0 : 40;
+  const shipping = subtotal >= 599 ? 0 : 49;
   const total = subtotal + shipping;
 
-  // Load QRCode library
-  if (!QRCode) {
-    await loadQRCodeLibrary();
-  }
-
+  // Render checkout form
   container.innerHTML = `
-    <div class="checkout-wrapper animate-fade-up">
-      <div class="checkout-header">
-        <h1>Checkout</h1>
-        <p>Review your order and complete payment</p>
-        <div class="checkout-steps">
-          <span class="step active">1. Cart</span>
-          <span class="step active">2. Details</span>
-          <span class="step">3. Payment</span>
-        </div>
-      </div>
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <h1 class="font-heading text-3xl text-maroon text-center">Checkout</h1>
+      <p class="text-center text-gray-500 text-sm mb-8">Fill in your details to complete the order</p>
 
-      <div class="checkout-grid">
-        <!-- Left: Order Summary -->
-        <div class="order-summary">
-          <h3>Order Summary</h3>
-          <div class="summary-items">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Order Summary -->
+        <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 order-2 md:order-1">
+          <h3 class="font-heading text-xl text-maroon mb-4">Order Summary</h3>
+          <div class="space-y-3 max-h-80 overflow-y-auto">
             ${cart.map(item => `
-              <div class="summary-item">
-                <img src="${item.image || 'assets/images/placeholder.jpg'}" alt="${item.name}">
-                <div class="item-details">
-                  <span class="item-name">${item.name}</span>
-                  <span class="item-qty">Qty: ${item.qty}</span>
+              <div class="flex items-center gap-3 border-b border-gray-200 pb-3">
+                <img src="${item.image || 'assets/images/placeholder.jpg'}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg" />
+                <div class="flex-1">
+                  <p class="font-semibold text-sm">${item.name}</p>
+                  <p class="text-xs text-gray-500">Qty: ${item.qty}</p>
                 </div>
-                <span class="item-price">₹${(item.price * item.qty).toFixed(2)}</span>
+                <span class="font-bold text-maroon">${formatCurrency(item.price * item.qty)}</span>
               </div>
             `).join('')}
           </div>
-          <div class="summary-totals">
-            <div class="subtotal"><span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span></div>
-            <div class="shipping"><span>Shipping</span><span>${shipping === 0 ? 'FREE' : '₹' + shipping.toFixed(2)}</span></div>
-            <div class="total"><span>Total</span><span>₹${total.toFixed(2)}</span></div>
+          <div class="border-t border-gray-300 mt-4 pt-4 space-y-1 text-sm">
+            <div class="flex justify-between"><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>
+            <div class="flex justify-between"><span>Shipping</span><span>${shipping === 0 ? 'FREE' : formatCurrency(shipping)}</span></div>
+            <div class="flex justify-between font-bold text-lg text-maroon border-t border-gray-300 pt-2 mt-2">
+              <span>Total</span><span>${formatCurrency(total)}</span>
+            </div>
           </div>
         </div>
 
-        <!-- Right: Form + Payment -->
-        <div class="checkout-form-wrapper">
+        <!-- Billing Form -->
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm order-1 md:order-2">
+          <h3 class="font-heading text-xl text-maroon mb-4">Shipping Address</h3>
           <form id="checkout-form">
-            <h3>Shipping Details</h3>
-            <div class="form-group floating-label">
-              <input type="text" id="checkout-name" required value="${user.displayName || ''}">
-              <label for="checkout-name">Full Name</label>
-            </div>
-            <div class="form-row">
-              <div class="form-group floating-label">
-                <input type="email" id="checkout-email" required value="${user.email}">
-                <label for="checkout-email">Email</label>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="mb-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">First Name *</label>
+                <input type="text" id="checkout-firstname" required class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
-              <div class="form-group floating-label">
-                <input type="tel" id="checkout-phone" required value="${user.phoneNumber || ''}">
-                <label for="checkout-phone">Phone</label>
+              <div class="mb-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Last Name *</label>
+                <input type="text" id="checkout-lastname" required class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
             </div>
-            <div class="form-group floating-label">
-              <textarea id="checkout-address" rows="3" required placeholder=" "></textarea>
-              <label for="checkout-address">Shipping Address</label>
+            <div class="mb-3">
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Email *</label>
+              <input type="email" id="checkout-email" value="${user.email}" required class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Phone *</label>
+              <input type="tel" id="checkout-phone" required class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Address Line 1 *</label>
+              <input type="text" id="checkout-address1" required class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Address Line 2 (optional)</label>
+              <input type="text" id="checkout-address2" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="mb-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">City *</label>
+                <input type="text" id="checkout-city" required class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+              </div>
+              <div class="mb-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Pincode *</label>
+                <input type="text" id="checkout-pincode" required class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="block text-sm font-semibold text-gray-700 mb-1">State *</label>
+              <input type="text" id="checkout-state" required class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gold outline-none" />
             </div>
 
-            <h3>Payment Method</h3>
-            <div class="payment-options">
-              <label class="payment-option">
-                <input type="radio" name="payment" value="phonepe" checked>
-                <span class="option-content">
-                  <i class="fa-brands fa-google-pay"></i> PhonePe (Redirect)
-                </span>
-              </label>
-              <label class="payment-option">
-                <input type="radio" name="payment" value="upi">
-                <span class="option-content">
-                  <i class="fa-solid fa-qrcode"></i> UPI QR Code
-                </span>
-              </label>
+            <!-- Payment Method -->
+            <div class="mb-4">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Payment Method</label>
+              <div class="flex flex-wrap gap-3">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="payment" value="phonepe" checked class="accent-maroon" />
+                  <span class="flex items-center gap-1"><i class="fa-solid fa-credit-card"></i> PhonePe</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="payment" value="upi" class="accent-maroon" />
+                  <span class="flex items-center gap-1"><i class="fa-solid fa-qrcode"></i> UPI QR</span>
+                </label>
+              </div>
             </div>
 
-            <div id="upi-qr-section" style="display:none; margin-top:16px; text-align:center;">
-              <div id="qr-code-container"></div>
-              <p class="qr-instruction">Scan with any UPI app to pay</p>
-              <p class="qr-amount">Amount: ₹${total.toFixed(2)}</p>
+            <!-- UPI QR placeholder -->
+            <div id="upi-qr-section" class="hidden bg-gray-50 p-4 rounded-lg text-center mb-4">
+              <p class="text-sm text-gray-600">Scan the QR code to pay:</p>
+              <div class="inline-block bg-white p-2 rounded shadow mt-2">
+                <img src="assets/images/upi-qr.png" alt="UPI QR" class="w-32 h-32 object-contain" />
+              </div>
+              <p class="text-xs text-gray-400 mt-2">Amount: <span class="font-bold text-maroon">${formatCurrency(total)}</span></p>
             </div>
 
-            <button type="submit" class="btn-primary checkout-btn">
-              <i class="fa-solid fa-lock"></i> Place Order & Pay
+            <button type="submit" id="place-order-btn" class="w-full bg-maroon text-white py-3 rounded-full font-bold hover:bg-[#5a0c2a] transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-lock"></i> Place Order
             </button>
           </form>
-          <div id="payment-status" class="payment-status"></div>
+          <p id="checkout-status" class="text-sm text-center mt-3"></p>
         </div>
       </div>
     </div>
   `;
 
-  // ─── Event Listeners ───
-  const form = document.getElementById('checkout-form');
-  const paymentRadios = document.querySelectorAll('input[name="payment"]');
-  const upiSection = document.getElementById('upi-qr-section');
-  const qrContainer = document.getElementById('qr-code-container');
-
-  // Toggle QR section
-  paymentRadios.forEach(radio => {
-    radio.addEventListener('change', function() {
-      if (this.value === 'upi') {
-        upiSection.style.display = 'block';
-        generateUPIQR(total, user.email);
+  // Payment method toggle
+  document.querySelectorAll('input[name="payment"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const upiSection = document.getElementById('upi-qr-section');
+      if (radio.value === 'upi') {
+        upiSection.classList.remove('hidden');
       } else {
-        upiSection.style.display = 'none';
+        upiSection.classList.add('hidden');
       }
     });
   });
 
-  // Generate QR on load if UPI selected by default (but redirect is default)
-  // We'll generate when user selects.
-
-  form.addEventListener('submit', async function(e) {
+  // Form submission
+  document.getElementById('checkout-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = document.getElementById('checkout-name').value.trim();
-    const email = document.getElementById('checkout-email').value.trim();
-    const phone = document.getElementById('checkout-phone').value.trim();
-    const address = document.getElementById('checkout-address').value.trim();
+    const btn = document.getElementById('place-order-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
 
-    if (!name || !email || !phone || !address) {
-      showPaymentStatus('Please fill all required fields.', 'error');
-      return;
-    }
-
+    const firstName = document.getElementById('checkout-firstname').value;
+    const lastName = document.getElementById('checkout-lastname').value;
+    const email = document.getElementById('checkout-email').value;
+    const phone = document.getElementById('checkout-phone').value;
+    const address1 = document.getElementById('checkout-address1').value;
+    const address2 = document.getElementById('checkout-address2').value || '';
+    const city = document.getElementById('checkout-city').value;
+    const pincode = document.getElementById('checkout-pincode').value;
+    const state = document.getElementById('checkout-state').value;
     const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
 
+    const fullAddress = `${address1}, ${address2}, ${city}, ${state} - ${pincode}`;
+
+    // Build order object
     const orderData = {
       userId: user.uid,
-      customerName: name,
+      customerName: `${firstName} ${lastName}`,
       email,
       phone,
-      address,
+      address: fullAddress,
       items: cart,
       subtotal,
       shipping,
       total,
+      paymentMethod,
       status: 'pending',
-      paymentMethod
     };
 
-    // Create order in Firestore
-    const orderResult = await createOrder(orderData);
-    if (!orderResult) {
-      showPaymentStatus('Order creation failed. Please try again.', 'error');
-      return;
+    try {
+      const result = await createOrder(orderData);
+      if (result && result.id) {
+        // Clear cart
+        localStorage.removeItem('glamm_cart');
+        // Update cart badge
+        const badge = document.getElementById('cart-badge');
+        if (badge) badge.textContent = '0';
+
+        if (paymentMethod === 'phonepe') {
+          // Redirect to PhonePe (simulate with a success message)
+          // In production, you would call a Cloud Function to get payment link
+          showToast('Order placed! Redirecting to PhonePe...', 'success');
+          // Simulate redirect after a short delay
+          setTimeout(() => {
+            // Replace with actual PhonePe redirect
+            window.location.href = `#dashboard`;
+          }, 2000);
+        } else {
+          // UPI – show success and keep order pending
+          showToast('Order placed! Please complete UPI payment.', 'success');
+          window.navigateTo('dashboard');
+        }
+      } else {
+        showToast('Failed to place order. Please try again.', 'error');
+      }
+    } catch (err) {
+      showToast('Something went wrong.', 'error');
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-lock"></i> Place Order';
     }
-
-    const orderId = orderResult.id;
-
-    // If UPI selected, we just show the QR and update order with a note
-    if (paymentMethod === 'upi') {
-      // We'll mark order as pending, user must pay via UPI.
-      // Show instructions
-      showPaymentStatus('Scan the QR code with your UPI app to complete payment. We\'ll confirm after we receive the payment.', 'success');
-      // Optionally, we could set a timeout to check payment status (but we'll rely on webhook)
-      // For now, we inform the user.
-      // Also, we could save the transaction ID (orderId) in the UPI string for reference.
-      // The order remains pending, and we'll update via webhook.
-      return;
-    }
-
-    // ─── PhonePe Redirect ───
-    const paymentResult = await createPhonePeOrder(orderId, total, user.email);
-    if (paymentResult && paymentResult.paymentLink) {
-      // Redirect to PhonePe payment page
-      window.location.href = paymentResult.paymentLink;
-    } else {
-      showPaymentStatus('Payment initiation failed. Please try again.', 'error');
-    }
-  });
-
-  // ─── Helper: show payment status ───
-  function showPaymentStatus(message, type = 'info') {
-    const statusEl = document.getElementById('payment-status');
-    statusEl.innerHTML = `<div class="status-${type}">${message}</div>`;
-  }
-
-  // ─── Helper: generate UPI QR ───
-  function generateUPIQR(amount, email) {
-    if (!QRCode) {
-      qrContainer.innerHTML = '<p>Loading QR library...</p>';
-      return;
-    }
-    // Construct UPI URI (use merchant's UPI ID – replace with your own)
-    const upiId = 'glammfashion@upi'; // Replace with actual UPI ID
-    const upiUrl = `upi://pay?pa=${upiId}&pn=Glamm Fashion&am=${amount.toFixed(2)}&cu=INR&tn=Order Payment`;
-    qrContainer.innerHTML = ''; // clear
-    new QRCode(qrContainer, {
-      text: upiUrl,
-      width: 200,
-      height: 200,
-      colorDark: '#7B113A',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.H
-    });
-  }
-}
-
-// ─── Load QRCode library from CDN ───
-function loadQRCodeLibrary() {
-  return new Promise((resolve, reject) => {
-    if (typeof QRCode !== 'undefined') {
-      resolve();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
-    script.onload = () => {
-      QRCode = window.QRCode;
-      resolve();
-    };
-    script.onerror = reject;
-    document.head.appendChild(script);
   });
 }

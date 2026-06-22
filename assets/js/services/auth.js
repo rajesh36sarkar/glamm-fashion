@@ -76,3 +76,8 @@ export async function resetPassword(email) {
 export function getCurrentUser() {
   return auth.currentUser;
 }
+
+export async function getUserRole(uid) {
+  const docSnap = await getDoc(doc(db, 'users', uid));
+  return docSnap.exists() ? docSnap.data().role : 'user';
+}

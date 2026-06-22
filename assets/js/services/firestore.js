@@ -31,25 +31,11 @@ export async function getHeroes() {
   const cached = getCached('heroes');
   if (cached) return cached;
   try {
-    const q = query(collection(db, 'heroes')); // No orderBy
+    const q = query(collection(db, 'heroes'));
     const snapshot = await getDocs(q);
     let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    // Sort by order field (if exists) else keep as is
     data.sort((a, b) => (a.order || 0) - (b.order || 0));
     setCached('heroes', data);
-    return data;
-  } catch (e) { handleError(e); }
-}
-
-export async function getHeroByPage(page) {
-  const cached = getCached(`hero_${page}`);
-  if (cached) return cached;
-  try {
-    const q = query(collection(db, 'heroes'), where('page', '==', page), limit(1));
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return null;
-    const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-    setCached(`hero_${page}`, data);
     return data;
   } catch (e) { handleError(e); }
 }
@@ -62,16 +48,15 @@ export async function saveHero(data, imageFile) {
       await uploadBytes(storageRef, imageFile);
       imageUrl = await getDownloadURL(storageRef);
     }
+    const heroData = { ...data, imageUrl, updatedAt: serverTimestamp() };
     if (data.id) {
-      await updateDoc(doc(db, 'heroes', data.id), { ...data, imageUrl, updatedAt: serverTimestamp() });
-      const result = { id: data.id, ...data, imageUrl };
-      setCached(`hero_${data.page}`, result);
-      return result;
+      await updateDoc(doc(db, 'heroes', data.id), heroData);
+      setCached('heroes', null);
+      return { id: data.id, ...heroData };
     } else {
-      const docRef = await addDoc(collection(db, 'heroes'), { ...data, imageUrl, createdAt: serverTimestamp() });
-      const result = { id: docRef.id, ...data, imageUrl };
-      setCached(`hero_${data.page}`, result);
-      return result;
+      const docRef = await addDoc(collection(db, 'heroes'), { ...heroData, createdAt: serverTimestamp() });
+      setCached('heroes', null);
+      return { id: docRef.id, ...heroData };
     }
   } catch (e) { handleError(e); }
 }
@@ -83,12 +68,12 @@ export async function deleteHero(id, imageUrl) {
       await deleteObject(ref).catch(() => {});
     }
     await deleteDoc(doc(db, 'heroes', id));
-    clearCache();
+    setCached('heroes', null);
     return { success: true };
   } catch (e) { handleError(e); }
 }
 
-// ---- CATEGORIES (CACHED) ----
+// ---- CATEGORIES ----
 export async function getCategories() {
   const cached = getCached('categories');
   if (cached) return cached;
@@ -110,10 +95,11 @@ export async function saveCategory(data, imageFile) {
       await uploadBytes(storageRef, imageFile);
       imageUrl = await getDownloadURL(storageRef);
     }
+    const catData = { ...data, imageUrl, updatedAt: serverTimestamp() };
     if (data.id) {
-      await updateDoc(doc(db, 'categories', data.id), { ...data, imageUrl, updatedAt: serverTimestamp() });
+      await updateDoc(doc(db, 'categories', data.id), catData);
     } else {
-      const docRef = await addDoc(collection(db, 'categories'), { ...data, imageUrl, createdAt: serverTimestamp() });
+      await addDoc(collection(db, 'categories'), { ...catData, createdAt: serverTimestamp() });
     }
     setCached('categories', null);
     return { ...data, imageUrl };
@@ -132,20 +118,15 @@ export async function deleteCategory(id, imageUrl) {
   } catch (e) { handleError(e); }
 }
 
-// ---- PRODUCTS (CACHED) ----
+// ---- PRODUCTS ----
 export async function getProducts() {
   const cached = getCached('products');
   if (cached) return cached;
   try {
-    const q = query(collection(db, 'products')); // No orderBy
+    const q = query(collection(db, 'products'));
     const snapshot = await getDocs(q);
     let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    // Sort by createdAt if exists, else by name
-    data.sort((a, b) => {
-      const dateA = a.createdAt?.toMillis?.() || 0;
-      const dateB = b.createdAt?.toMillis?.() || 0;
-      return dateB - dateA; // newest first
-    });
+    data.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
     setCached('products', data);
     return data;
   } catch (e) { handleError(e); }
@@ -199,7 +180,7 @@ export async function deleteProduct(id, imageUrl) {
   } catch (e) { handleError(e); }
 }
 
-// ---- ORDERS (no caching) ----
+// ---- ORDERS ----
 export async function getOrders() {
   try {
     const q = query(collection(db, 'orders'));
@@ -207,12 +188,14 @@ export async function getOrders() {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (e) { handleError(e); }
 }
+
 export async function getOrderById(id) {
   try {
     const docSnap = await getDoc(doc(db, 'orders', id));
     return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
   } catch (e) { handleError(e); }
 }
+
 export async function getOrdersByUser(userId) {
   try {
     const q = query(collection(db, 'orders'), where('userId', '==', userId));
@@ -220,6 +203,7 @@ export async function getOrdersByUser(userId) {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (e) { handleError(e); }
 }
+
 export async function createOrder(data) {
   try {
     const docRef = await addDoc(collection(db, 'orders'), {
@@ -231,24 +215,17 @@ export async function createOrder(data) {
     return { id: docRef.id, ...data };
   } catch (e) { handleError(e); }
 }
+
 export async function updateOrder(id, data) {
   try {
     await updateDoc(doc(db, 'orders', id), { ...data, updatedAt: serverTimestamp() });
     return { success: true };
   } catch (e) { handleError(e); }
 }
+
 export async function deleteOrder(id) {
   try {
     await deleteDoc(doc(db, 'orders', id));
-    return { success: true };
-  } catch (e) { handleError(e); }
-}
-export async function updateOrderDelivery(orderId, deliveryData) {
-  try {
-    await updateDoc(doc(db, 'orders', orderId), {
-      delivery: deliveryData,
-      updatedAt: serverTimestamp()
-    });
     return { success: true };
   } catch (e) { handleError(e); }
 }
@@ -261,6 +238,7 @@ export async function getContacts() {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (e) { handleError(e); }
 }
+
 export async function createContact(data) {
   try {
     const docRef = await addDoc(collection(db, 'contacts'), {
@@ -271,12 +249,14 @@ export async function createContact(data) {
     return { id: docRef.id, ...data };
   } catch (e) { handleError(e); }
 }
+
 export async function updateContact(id, data) {
   try {
     await updateDoc(doc(db, 'contacts', id), { ...data, updatedAt: serverTimestamp() });
     return { success: true };
   } catch (e) { handleError(e); }
 }
+
 export async function deleteContact(id) {
   try {
     await deleteDoc(doc(db, 'contacts', id));
@@ -291,12 +271,14 @@ export async function getUsers() {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (e) { handleError(e); }
 }
+
 export async function getUserById(uid) {
   try {
     const docSnap = await getDoc(doc(db, 'users', uid));
     return docSnap.exists() ? { uid: docSnap.id, ...docSnap.data() } : null;
   } catch (e) { handleError(e); }
 }
+
 export async function updateUser(uid, data) {
   try {
     await updateDoc(doc(db, 'users', uid), { ...data, updatedAt: serverTimestamp() });
@@ -321,15 +303,6 @@ export async function addSubscriber(email) {
 }
 
 // ---- ANALYTICS ----
-export async function getAnalytics() {
-  try {
-    const snapshot = await getDocs(collection(db, 'analytics'));
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (e) {
-    console.error('Analytics error:', e);
-    return [];
-  }
-}
 export async function trackAction(productId, action, userId = null) {
   try {
     await addDoc(collection(db, 'analytics'), {
@@ -344,6 +317,3 @@ export async function trackAction(productId, action, userId = null) {
     return { success: true };
   } catch (e) { handleError(e); }
 }
-
-// Helper to clear all caches
-export { clearCache } from '../utils/cache.js';

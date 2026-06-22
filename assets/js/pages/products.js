@@ -1,162 +1,82 @@
 import { getProducts, getCategories } from '../services/firestore.js';
-import { getImageUrl } from '../utils/helpers.js';
+import { renderProductCard } from '../components/product-card.js';
 
-export async function renderProducts() {
+/**
+ * Render the Products page
+ * - Category filter buttons (from Firestore)
+ * - Search query support (via ?search=...)
+ * - Product grid using shared product-card component
+ * - Event delegation for Quick View and Add to Cart
+ */
+export async function renderProducts(params) {
   const container = document.getElementById('page-content');
-  const urlParams = new URLSearchParams(window.location.search);
-  const categoryId = urlParams.get('category');
-  const searchQuery = urlParams.get('search');
+  const [allProducts, categories] = await Promise.all([getProducts(), getCategories()]);
 
-  // Show skeleton loading
-  container.innerHTML = `
-    <div class="page-header">
-      <h1>Our Collection</h1>
-      <p>Discover our premium jewellery</p>
-    </div>
-    <div class="product-filters skeleton-filters"></div>
-    <div class="product-grid skeleton-grid">
-      ${Array(6).fill(0).map(() => `
-        <div class="product-card skeleton">
-          <div class="skeleton-img"></div>
-          <div class="skeleton-text"></div>
-          <div class="skeleton-text short"></div>
-        </div>
-      `).join('')}
-    </div>
-  `;
+  const categoryId = params.get('category');
+  const search = params.get('search');
 
-  // Fetch data
-  const [categories, products] = await Promise.all([getCategories(), getProducts()]);
-
-  let filtered = products;
+  let filtered = allProducts;
   if (categoryId) {
-    filtered = filtered.filter(p => p.categoryId === categoryId);
+    filtered = filtered.filter(p => p.categoryId === categoryId || p.category === categoryId);
   }
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+  if (search) {
+    const q = search.toLowerCase();
+    filtered = filtered.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.category && p.category.toLowerCase().includes(q))
+    );
   }
 
-  // Render actual content
   container.innerHTML = `
-    <div class="page-header animate-fade-up">
-      <h1>Our Collection</h1>
-      <p>Discover our premium jewellery</p>
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <h1 class="font-heading text-3xl text-maroon text-center mb-2">Our Collection</h1>
+      <p class="text-center text-gray-500 text-sm mb-6">Discover timeless elegance</p>
+
+      <!-- Category filters -->
+      <div class="flex flex-wrap justify-center gap-2 mb-8">
+        <a href="#products" class="filter-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium hover:bg-maroon hover:text-white transition ${!categoryId && !search ? 'bg-maroon text-white border-maroon' : 'bg-white'}">All</a>
+        ${categories.map(c => `
+          <a href="#products?category=${c.id}" class="filter-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium hover:bg-maroon hover:text-white transition ${categoryId === c.id ? 'bg-maroon text-white border-maroon' : 'bg-white'}">${c.name}</a>
+        `).join('')}
+      </div>
+
+      ${search ? `<p class="text-sm text-gray-500 mb-4 text-center">Showing results for: <strong>"${search}"</strong></p>` : ''}
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        ${filtered.length > 0 ? filtered.map(p => renderProductCard(p)).join('') : `
+          <p class="text-center text-gray-400 col-span-full py-12">No products found. Try a different filter.</p>
+        `}
+      </div>
     </div>
-    <section class="products-section">
-      <div class="product-filters animate-fade-up" style="animation-delay:0.1s;" id="products-filter-buttons">
-        <button class="filter-btn active" data-filter="all">All</button>
-        ${categories.map(cat => `<button class="filter-btn" data-filter="${cat.id}">${cat.name}</button>`).join('')}
-      </div>
-      <div class="product-grid animate-fade-up" style="animation-delay:0.2s;" id="products-product-grid">
-        ${filtered.length ? filtered.map(p => createProductCard(p)).join('') : `<p class="no-products">No products found.</p>`}
-      </div>
-    </section>
   `;
-
-  // ─── Filter logic ───
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const filter = this.dataset.filter;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      const cards = document.querySelectorAll('.product-card');
-      cards.forEach(card => {
-        if (filter === 'all') {
-          card.style.display = 'block';
-        } else {
-          card.style.display = (card.dataset.categoryId === filter) ? 'block' : 'none';
-        }
-      });
-    });
-  });
-
-  attachProductEvents();
-
-  // ─── Trigger fade-in animation after render ───
-  document.querySelectorAll('.animate-fade-up').forEach((el, i) => {
-    el.style.animationDelay = `${i * 0.1}s`;
-    el.classList.add('visible');
-  });
 }
 
-// ─── Create Product Card ───
-function createProductCard(product) {
-  const hasOld = product.oldPrice && product.oldPrice > 0;
-  const discount = hasOld ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
-  let badge = '';
-  if (product.badge === 'bestseller') badge = `<span class="product-badge bestseller">⭐ Bestseller</span>`;
-  else if (product.badge === 'new') badge = `<span class="product-badge new">✨ New</span>`;
-  else if (hasOld && discount >= 20) badge = `<span class="product-badge sale">🔥 ${discount}% OFF</span>`;
+// ─── Event Delegation for Quick View & Add to Cart ───
+document.getElementById('page-content').addEventListener('click', async (e) => {
+  const target = e.target.closest('button');
+  if (!target) return;
 
-  const rating = product.rating || { stars: 4.5, count: 120 };
-  const fullStars = Math.floor(rating.stars);
-  const hasHalf = rating.stars % 1 >= 0.5;
-  let starsHtml = '';
-  for (let i = 0; i < 5; i++) {
-    if (i < fullStars) starsHtml += '<i class="fa-solid fa-star"></i>';
-    else if (i === fullStars && hasHalf) starsHtml += '<i class="fa-solid fa-star-half-stroke"></i>';
-    else starsHtml += '<i class="fa-regular fa-star"></i>';
+  // Quick View
+  if (target.classList.contains('quick-view')) {
+    const id = target.dataset.id;
+    // Import modal function dynamically to avoid circular imports
+    const { openProductModal } = await import('./product-detail.js');
+    openProductModal(id);
+    return;
   }
 
-  return `
-    <div class="product-card" data-id="${product.id}" data-category-id="${product.categoryId || ''}">
-      <div class="product-img-wrapper">
-        <img src="${getImageUrl(product.imageUrl)}" alt="${product.name}" loading="lazy">
-        ${badge}
-        <div class="product-actions">
-          <button class="quick-btn quick-view" data-id="${product.id}"><i class="fa-regular fa-eye"></i> Quick View</button>
-          <button class="quick-btn quick-wishlist" data-id="${product.id}"><i class="fa-regular fa-heart"></i></button>
-        </div>
-      </div>
-      <div class="product-info">
-        <span class="product-category">${product.category}</span>
-        <h3 class="product-title">${product.name}</h3>
-        <div class="product-rating">
-          <span class="stars">${starsHtml}</span>
-          <span class="count">(${rating.count})</span>
-        </div>
-        <div class="product-price">
-          <span class="current-price">₹${product.price}</span>
-          ${hasOld ? `<span class="old-price">₹${product.oldPrice}</span>` : ''}
-        </div>
-        <button class="btn-add-cart" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}" data-image="${getImageUrl(product.imageUrl)}">
-          <i class="fa-solid fa-bag-shopping"></i> Add to Cart
-        </button>
-      </div>
-    </div>
-  `;
-}
-
-// ─── Attach events ───
-function attachProductEvents() {
-  document.querySelectorAll('.btn-add-cart').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      window.addToCart({
-        id: this.dataset.id,
-        name: this.dataset.name,
-        price: parseFloat(this.dataset.price),
-        image: this.dataset.image
-      });
-    });
-  });
-  document.querySelectorAll('.quick-view').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      window.navigateTo('product?id=' + this.dataset.id);
-    });
-  });
-  document.querySelectorAll('.quick-wishlist').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const icon = this.querySelector('i');
-      icon.classList.toggle('fa-regular');
-      icon.classList.toggle('fa-solid');
-      icon.style.color = icon.classList.contains('fa-solid') ? '#e74c3c' : '';
-      if (icon.classList.contains('fa-solid')) {
-        import('../services/analytics.js').then(({ trackLike }) => trackLike(this.dataset.id));
-      }
-    });
-  });
-}
+  // Add to Cart
+  if (target.classList.contains('add-cart-btn')) {
+    const card = target.closest('.product-card');
+    if (!card) return;
+    const id = card.dataset.id;
+    // Fetch product data from Firestore (or use cached)
+    const { getProductById } = await import('../services/firestore.js');
+    const product = await getProductById(id);
+    if (product) {
+      const { addToCart, showToast } = await import('../components/cart.js');
+      addToCart(product);
+      showToast(`${product.name} added to cart!`, 'success');
+    }
+  }
+});

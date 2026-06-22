@@ -1,92 +1,104 @@
 import { getCategories } from '../services/firestore.js';
-import { getCurrentUser, signOutUser } from '../services/auth.js';
-
-let headerInstance = null;
+import { getCurrentUser, onAuthStateChange } from '../services/auth.js';
 
 export async function renderHeader() {
-  if (headerInstance) return headerInstance;
-  
   const placeholder = document.getElementById('header-placeholder');
   const categories = await getCategories();
-
-  // Build category buttons (filter active categories)
-  let categoryLinks = categories
-    .filter(cat => cat.isActive !== false)
-    .map(cat => `
-      <a href="#" data-category="${cat.id}" class="category-link">${cat.name}</a>
-    `)
-    .join('');
+  const user = getCurrentUser();
 
   placeholder.innerHTML = `
-    <header class="main-header">
-      <div class="logo header-logo">
-        <a href="#" onclick="window.navigateTo('home'); return false;">
-          <img src="assets/images/logo.png" alt="Glamm Fashion Logo" onerror="this.style.display='none'">
-        </a>
+    <header class="sticky top-0 z-50 bg-peach border-b border-gray-200">
+      <!-- Top bar -->
+      <div class="bg-maroon text-white text-center text-sm py-1.5 overflow-hidden">
+        <div class="flex animate-marquee whitespace-nowrap">
+          <span class="mx-8">✨ Free Shipping on orders above ₹599</span>
+          <span class="mx-8">📦 100% Authentic Jewellery</span>
+          <span class="mx-8">💎 Glamm Fashion – Wear The Elegant</span>
+        </div>
       </div>
-      <nav class="main-nav" id="main-nav">
-        <ul>
-          <li><a href="#" onclick="window.navigateTo('home'); return false;">Home</a></li>
-          <li><a href="#" onclick="window.navigateTo('products'); return false;">Products</a></li>
-          <li><a href="#" onclick="window.navigateTo('about'); return false;">About</a></li>
-          <li><a href="#" onclick="window.navigateTo('contact'); return false;">Contact</a></li>
-          ${getCurrentUser() ? `<li><a href="#" onclick="window.navigateTo('dashboard'); return false;">Dashboard</a></li>` : ''}
-        </ul>
-      </nav>
-      <div class="header-icons">
-        <a href="#" id="search-toggle" class="icon-hover"><i class="fa-solid fa-magnifying-glass"></i></a>
-        <a href="#" class="icon-hover" id="auth-toggle">
-          ${getCurrentUser() ? `<i class="fa-regular fa-user"></i>` : `<i class="fa-regular fa-circle-user"></i>`}
+
+      <!-- Main header -->
+      <div class="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
+        <a href="#home" class="flex items-center gap-2">
+          <img src="assets/images/logo.png" alt="Glamm" class="h-10 sm:h-12" />
         </a>
-        <a href="#" class="cart-icon icon-hover" id="cart-toggle">
-          <i class="fa-solid fa-bag-shopping"></i>
-          <span class="cart-count" id="cart-count-badge">0</span>
-        </a>
-        <a href="#" class="mobile-toggle" id="mobile-menu-btn"><i class="fa-solid fa-bars"></i></a>
+
+        <!-- Desktop nav -->
+        <nav class="hidden md:flex items-center gap-6 font-semibold text-sm">
+          <a href="#home" class="hover:text-maroon transition">Home</a>
+          <a href="#products" class="hover:text-maroon transition">Products</a>
+          <a href="#about" class="hover:text-maroon transition">About</a>
+          <a href="#contact" class="hover:text-maroon transition">Contact</a>
+          ${user ? `<a href="#dashboard" class="hover:text-maroon transition">Dashboard</a>` : ''}
+          ${user?.role === 'admin' ? `<a href="#admin" class="hover:text-maroon transition">Admin</a>` : ''}
+        </nav>
+
+        <!-- Icons -->
+        <div class="flex items-center gap-4 text-xl">
+          <button id="search-toggle" class="hover:text-maroon transition">
+            <i class="fa-solid fa-search"></i>
+          </button>
+          <button id="cart-toggle" class="relative hover:text-maroon transition">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span id="cart-badge" class="absolute -top-2 -right-2 bg-maroon text-white text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full">0</span>
+          </button>
+          <button id="auth-toggle" class="hover:text-maroon transition">
+            <i class="fa-regular fa-user"></i>
+          </button>
+          <button id="mobile-menu-toggle" class="md:hidden text-2xl hover:text-maroon transition">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile nav -->
+      <div id="mobile-nav" class="md:hidden hidden bg-white border-t border-gray-100 px-4 py-3">
+        <a href="#home" class="block py-2 hover:text-maroon">Home</a>
+        <a href="#products" class="block py-2 hover:text-maroon">Products</a>
+        <a href="#about" class="block py-2 hover:text-maroon">About</a>
+        <a href="#contact" class="block py-2 hover:text-maroon">Contact</a>
+        ${user ? `<a href="#dashboard" class="block py-2 hover:text-maroon">Dashboard</a>` : ''}
+        ${user?.role === 'admin' ? `<a href="#admin" class="block py-2 hover:text-maroon">Admin</a>` : ''}
+      </div>
+
+      <!-- Category pills -->
+      <div class="flex overflow-x-auto gap-2 px-4 py-2 bg-gray-50 border-t border-gray-100 scrollbar-hide">
+        <a href="#products" class="category-link whitespace-nowrap px-4 py-1 bg-white rounded-full border border-gray-200 text-sm font-medium hover:bg-maroon hover:text-white transition">All</a>
+        ${categories.map(c => `
+          <a href="#products?category=${c.id}" class="category-link whitespace-nowrap px-4 py-1 bg-white rounded-full border border-gray-200 text-sm font-medium hover:bg-maroon hover:text-white transition">${c.name}</a>
+        `).join('')}
       </div>
     </header>
-
-    <!-- Category Bar (scrollable on mobile) -->
-    <div class="category-bar" id="category-bar">
-      <div class="category-bar-inner">
-        ${categoryLinks || '<span class="no-categories">No categories yet</span>'}
-      </div>
-    </div>
   `;
 
-  // ─── Category links: navigate to filtered products ───
-  document.querySelectorAll('.category-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      window.navigateTo('products?category=' + this.dataset.category);
-    });
+  // Mobile toggle
+  document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+    const nav = document.getElementById('mobile-nav');
+    nav.classList.toggle('hidden');
   });
 
-  // ─── Auth toggle ───
-  document.getElementById('auth-toggle').addEventListener('click', (e) => {
-    e.preventDefault();
+  // Cart toggle
+  document.getElementById('cart-toggle').addEventListener('click', () => {
+    document.getElementById('cart-sidebar').classList.toggle('translate-x-0');
+    document.getElementById('cart-overlay').classList.toggle('hidden');
+  });
+
+  // Auth toggle
+  document.getElementById('auth-toggle').addEventListener('click', () => {
     if (getCurrentUser()) {
-      if (confirm('Logout?')) {
-        signOutUser().then(() => window.location.reload());
-      }
+      window.navigateTo('dashboard');
     } else {
-      window.openAuthModal();
+      document.getElementById('auth-modal').classList.add('open');
     }
   });
 
-  // ─── Mobile menu toggle ───
-  document.getElementById('mobile-menu-btn').addEventListener('click', (e) => {
-    e.preventDefault();
-    document.getElementById('main-nav').classList.toggle('active');
-  });
+  // Update cart badge
+  updateCartBadge();
+}
 
-  // ─── Close mobile menu on nav link click ───
-  document.querySelectorAll('#main-nav a').forEach(link => {
-    link.addEventListener('click', () => {
-      document.getElementById('main-nav').classList.remove('active');
-    });
-  });
-
-  headerInstance = placeholder.innerHTML;
-  return headerInstance;
+export function updateCartBadge() {
+  const cart = JSON.parse(localStorage.getItem('glamm_cart') || '[]');
+  const count = cart.reduce((sum, item) => sum + item.qty, 0);
+  const badge = document.getElementById('cart-badge');
+  if (badge) badge.textContent = count;
 }

@@ -1,0 +1,68 @@
+/* Tailwind overrides & custom animations */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Lato:wght@300;400;700&display=swap');
+
+body {
+  font-family: 'Lato', sans-serif;
+}
+
+.font-heading {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Preloader */
+#preloader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Toast */
+.toast.show {
+  display: flex !important;
+}
+
+/* Auth forms */
+.auth-form.active {
+  display: block !important;
+}
+.auth-form.hidden {
+  display: none !important;
+}
+
+/* Cart sidebar */
+#cart-sidebar.translate-x-full {
+  transform: translateX(100%);
+}
+#cart-sidebar.translate-x-0 {
+  transform: translateX(0);
+}
+
+/* Search modal */
+#search-modal.open {
+  display: flex !important;
+}
+#search-modal .scale-95 {
+  transform: scale(0.95);
+}
+#search-modal.open .scale-95 {
+  transform: scale(1);
+}
+
+/* Product modal */
+#product-modal.open {
+  display: flex !important;
+}
+
+/* Admin modal */
+#admin-modal.open {
+  display: flex !important;
+}
+
+/* Misc */
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}

@@ -5,18 +5,16 @@ import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDsHO_ciz01YgLiOQMeahfcApGVrAJpzVw",
-  authDomain: "glamm-fashion-dd870.firebaseapp.com",
-  projectId: "glamm-fashion-dd870",
-  storageBucket: "glamm-fashion-dd870.firebasestorage.app",
-  messagingSenderId: "44898219768",
-  appId: "1:44898219768:web:b29f903d5200075637ad0d",
-  measurementId: "G-4XP22RZ0FS"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, "glammfashion");
+export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
-export default app;

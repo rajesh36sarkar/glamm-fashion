@@ -26,9 +26,10 @@ export function navigateTo(route) {
 
 export function handleRoute() {
   const hash = window.location.hash.slice(1) || 'home';
-  const [path] = hash.split('?');
+  const [path, query] = hash.split('?');
   const renderFn = routes[path] || renderHome;
-  renderFn();
+  const params = new URLSearchParams(query || '');
+  renderFn(params);
 }
 
 window.navigateTo = navigateTo;

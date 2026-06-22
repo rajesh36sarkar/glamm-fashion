@@ -1,5 +1,6 @@
 import { getCategories } from '../services/firestore.js';
-import { getCurrentUser, onAuthStateChange } from '../services/auth.js';
+import { getCurrentUser } from '../services/auth.js';
+import { updateCartBadge } from './cart.js';
 
 export async function renderHeader() {
   const placeholder = document.getElementById('header-placeholder');
@@ -8,7 +9,6 @@ export async function renderHeader() {
 
   placeholder.innerHTML = `
     <header class="sticky top-0 z-50 bg-peach border-b border-gray-200">
-      <!-- Top bar -->
       <div class="bg-maroon text-white text-center text-sm py-1.5 overflow-hidden">
         <div class="flex animate-marquee whitespace-nowrap">
           <span class="mx-8">✨ Free Shipping on orders above ₹599</span>
@@ -16,14 +16,10 @@ export async function renderHeader() {
           <span class="mx-8">💎 Glamm Fashion – Wear The Elegant</span>
         </div>
       </div>
-
-      <!-- Main header -->
       <div class="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
         <a href="#home" class="flex items-center gap-2">
           <img src="assets/images/logo.png" alt="Glamm" class="h-10 sm:h-12" />
         </a>
-
-        <!-- Desktop nav -->
         <nav class="hidden md:flex items-center gap-6 font-semibold text-sm">
           <a href="#home" class="hover:text-maroon transition">Home</a>
           <a href="#products" class="hover:text-maroon transition">Products</a>
@@ -32,26 +28,16 @@ export async function renderHeader() {
           ${user ? `<a href="#dashboard" class="hover:text-maroon transition">Dashboard</a>` : ''}
           ${user?.role === 'admin' ? `<a href="#admin" class="hover:text-maroon transition">Admin</a>` : ''}
         </nav>
-
-        <!-- Icons -->
         <div class="flex items-center gap-4 text-xl">
-          <button id="search-toggle" class="hover:text-maroon transition">
-            <i class="fa-solid fa-search"></i>
-          </button>
+          <button id="search-toggle" class="hover:text-maroon transition"><i class="fa-solid fa-search"></i></button>
           <button id="cart-toggle" class="relative hover:text-maroon transition">
             <i class="fa-solid fa-bag-shopping"></i>
             <span id="cart-badge" class="absolute -top-2 -right-2 bg-maroon text-white text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full">0</span>
           </button>
-          <button id="auth-toggle" class="hover:text-maroon transition">
-            <i class="fa-regular fa-user"></i>
-          </button>
-          <button id="mobile-menu-toggle" class="md:hidden text-2xl hover:text-maroon transition">
-            <i class="fa-solid fa-bars"></i>
-          </button>
+          <button id="auth-toggle" class="hover:text-maroon transition"><i class="fa-regular fa-user"></i></button>
+          <button id="mobile-menu-toggle" class="md:hidden text-2xl hover:text-maroon transition"><i class="fa-solid fa-bars"></i></button>
         </div>
       </div>
-
-      <!-- Mobile nav -->
       <div id="mobile-nav" class="md:hidden hidden bg-white border-t border-gray-100 px-4 py-3">
         <a href="#home" class="block py-2 hover:text-maroon">Home</a>
         <a href="#products" class="block py-2 hover:text-maroon">Products</a>
@@ -60,8 +46,6 @@ export async function renderHeader() {
         ${user ? `<a href="#dashboard" class="block py-2 hover:text-maroon">Dashboard</a>` : ''}
         ${user?.role === 'admin' ? `<a href="#admin" class="block py-2 hover:text-maroon">Admin</a>` : ''}
       </div>
-
-      <!-- Category pills -->
       <div class="flex overflow-x-auto gap-2 px-4 py-2 bg-gray-50 border-t border-gray-100 scrollbar-hide">
         <a href="#products" class="category-link whitespace-nowrap px-4 py-1 bg-white rounded-full border border-gray-200 text-sm font-medium hover:bg-maroon hover:text-white transition">All</a>
         ${categories.map(c => `
@@ -73,8 +57,7 @@ export async function renderHeader() {
 
   // Mobile toggle
   document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
-    const nav = document.getElementById('mobile-nav');
-    nav.classList.toggle('hidden');
+    document.getElementById('mobile-nav').classList.toggle('hidden');
   });
 
   // Cart toggle
@@ -92,13 +75,5 @@ export async function renderHeader() {
     }
   });
 
-  // Update cart badge
   updateCartBadge();
-}
-
-export function updateCartBadge() {
-  const cart = JSON.parse(localStorage.getItem('glamm_cart') || '[]');
-  const count = cart.reduce((sum, item) => sum + item.qty, 0);
-  const badge = document.getElementById('cart-badge');
-  if (badge) badge.textContent = count;
 }

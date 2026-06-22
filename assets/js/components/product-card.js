@@ -1,17 +1,5 @@
 import { formatCurrency } from '../utils/helpers.js';
 
-/**
- * Render a product card HTML
- * @param {Object} product - Product data object
- * @param {string} product.id - Unique ID
- * @param {string} product.name - Product name
- * @param {number} product.price - Current price
- * @param {number} product.originalPrice - Original price (optional)
- * @param {string} product.imageUrl - Image URL
- * @param {string} product.category - Category name
- * @param {string} product.badge - Badge text (bestseller, new, sale)
- * @returns {string} HTML string
- */
 export function renderProductCard(product) {
   return `
     <div class="product-card bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group" data-id="${product.id}">

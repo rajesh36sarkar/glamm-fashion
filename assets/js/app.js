@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('search-modal').classList.remove('open');
     }
   });
+  document.getElementById('search-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('search-submit').click();
+  });
 
   // Preloader
   const preloader = document.getElementById('preloader');

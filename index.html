@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Glamm Fashion | Wear The Elegant</title>
 
-  <!-- Tailwind CSS CDN + custom theme -->
+  <!-- Tailwind CSS CDN (for production, use compiled CSS) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -23,21 +23,11 @@
           },
           animation: {
             fadeUp: 'fadeUp 0.8s ease-out forwards',
-            float: 'float 6s ease-in-out infinite alternate',
-            marquee: 'marquee 25s linear infinite',
           },
           keyframes: {
             fadeUp: {
               '0%': { opacity: '0', transform: 'translateY(30px)' },
               '100%': { opacity: '1', transform: 'translateY(0)' },
-            },
-            float: {
-              '0%': { transform: 'translateY(0px) scale(1)' },
-              '100%': { transform: 'translateY(-20px) scale(1.02)' },
-            },
-            marquee: {
-              '0%': { transform: 'translateX(0)' },
-              '100%': { transform: 'translateX(-50%)' },
             },
           },
         },
@@ -60,7 +50,7 @@
 </head>
 <body>
 
-  <!-- ====== PRELOADER ====== -->
+  <!-- PRELOADER -->
   <div id="preloader" class="fixed inset-0 z-[99999] flex items-center justify-center bg-gradient-to-br from-[#7B113A] via-[#4A0821] to-[#1A0A0A] transition-opacity duration-700 ease-out">
     <div class="text-center relative">
       <div class="absolute inset-0 -top-10 w-[120%] -left-[10%] h-20 bg-gradient-to-r from-transparent via-[#FCF6BA]/20 to-transparent blur-2xl animate-pulse"></div>
@@ -77,30 +67,30 @@
     </div>
   </div>
 
-  <!-- ====== TOAST ====== -->
+  <!-- TOAST -->
   <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] bg-dark/90 text-white px-6 py-3 rounded-full shadow-xl font-semibold hidden items-center gap-4 text-sm sm:text-base">
     <span id="toast-msg"></span>
     <span id="toast-close" class="cursor-pointer opacity-70 hover:opacity-100 text-lg">&times;</span>
   </div>
 
-  <!-- ====== HEADER ====== -->
+  <!-- HEADER -->
   <div id="header-placeholder"></div>
 
-  <!-- ====== MAIN CONTENT ====== -->
+  <!-- MAIN CONTENT -->
   <main id="app-main" class="min-h-screen bg-white">
     <div id="page-content"></div>
   </main>
 
-  <!-- ====== FOOTER ====== -->
+  <!-- FOOTER -->
   <div id="footer-placeholder"></div>
 
-  <!-- ====== WHATSAPP FLOAT ====== -->
+  <!-- WHATSAPP FLOAT -->
   <a href="https://wa.me/919481605367" target="_blank" rel="noopener"
      class="fixed bottom-6 right-6 z-[1000] w-12 h-12 sm:w-14 sm:h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl shadow-lg hover:scale-110 transition-transform duration-300">
     <i class="fa-brands fa-whatsapp"></i>
   </a>
 
-  <!-- ====== SEARCH MODAL ====== -->
+  <!-- SEARCH MODAL -->
   <div id="search-modal" class="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-md hidden items-center justify-center">
     <div class="bg-white/95 rounded-2xl p-6 sm:p-10 w-[92%] max-w-lg transform transition-all duration-300 scale-95">
       <h3 class="font-heading text-2xl sm:text-3xl text-maroon font-bold text-center">🔍 Search Products</h3>
@@ -116,7 +106,7 @@
     </div>
   </div>
 
-  <!-- ====== CART SIDEBAR ====== -->
+  <!-- CART SIDEBAR -->
   <div id="cart-overlay" class="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-sm hidden"></div>
   <div id="cart-sidebar" class="fixed top-0 right-0 w-[92%] max-w-md h-full z-[10000] bg-white shadow-2xl transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] translate-x-full overflow-y-auto flex flex-col p-5 sm:p-7">
     <div class="flex justify-between items-center border-b border-gray-100 pb-4">
@@ -143,7 +133,7 @@
     </div>
   </div>
 
-  <!-- ====== PRODUCT DETAIL MODAL ====== -->
+  <!-- PRODUCT DETAIL MODAL -->
   <div id="product-modal" class="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto relative animate-fadeUp">
       <button id="modal-close-btn" class="absolute top-3 right-4 text-3xl text-gray-400 hover:text-maroon transition z-10">&times;</button>
@@ -179,7 +169,7 @@
     </div>
   </div>
 
-  <!-- ====== AUTH MODAL ====== -->
+  <!-- AUTH MODAL -->
   <div id="auth-modal" class="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 relative animate-fadeUp">
       <button id="auth-close" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-maroon transition">&times;</button>
@@ -242,7 +232,7 @@
     </div>
   </div>
 
-  <!-- ====== ADMIN MODAL ====== -->
+  <!-- ADMIN MODAL -->
   <div id="admin-modal" class="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[95vh] overflow-y-auto p-6 sm:p-8 relative animate-fadeUp">
       <h3 id="admin-modal-title" class="font-heading text-2xl text-maroon font-bold">Add Product</h3>
@@ -293,7 +283,7 @@
     </div>
   </div>
 
-  <!-- ====== FIREBASE IMPORTS ====== -->
+  <!-- FIREBASE IMPORTS -->
   <script type="importmap">
     {
       "imports": {
@@ -306,8 +296,7 @@
     }
   </script>
 
-  <!-- ====== MAIN APP ====== -->
+  <!-- MAIN APP -->
   <script type="module" src="assets/js/app.js"></script>
-
 </body>
 </html>

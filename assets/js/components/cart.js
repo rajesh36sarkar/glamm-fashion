@@ -1,16 +1,15 @@
 import { formatCurrency } from '../utils/helpers.js';
-import { updateCartBadge } from './header.js';
 
 export function initCart() {
   renderCartItems();
   setupCartEvents();
 }
 
-function getCart() {
+export function getCart() {
   return JSON.parse(localStorage.getItem('glamm_cart') || '[]');
 }
 
-function saveCart(cart) {
+export function saveCart(cart) {
   localStorage.setItem('glamm_cart', JSON.stringify(cart));
   renderCartItems();
   updateCartBadge();
@@ -59,7 +58,6 @@ function renderCartItems() {
 }
 
 function setupCartEvents() {
-  // Delegate events
   document.getElementById('cart-items-list').addEventListener('click', (e) => {
     const target = e.target.closest('button');
     if (!target) return;
@@ -80,7 +78,6 @@ function setupCartEvents() {
     saveCart(cart);
   });
 
-  // Close cart
   document.getElementById('cart-close').addEventListener('click', () => {
     document.getElementById('cart-sidebar').classList.remove('translate-x-0');
     document.getElementById('cart-overlay').classList.add('hidden');
@@ -90,7 +87,6 @@ function setupCartEvents() {
     document.getElementById('cart-overlay').classList.add('hidden');
   });
 
-  // Checkout
   document.getElementById('cart-checkout-btn').addEventListener('click', () => {
     const cart = getCart();
     if (cart.length === 0) {
@@ -126,11 +122,14 @@ export function showToast(msg, type = 'success') {
   const toast = document.getElementById('toast');
   const msgEl = document.getElementById('toast-msg');
   msgEl.textContent = msg;
-  toast.className = `toast fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] px-6 py-3 rounded-full shadow-xl font-semibold flex items-center gap-4 text-sm sm:text-base ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`;
+  toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] px-6 py-3 rounded-full shadow-xl font-semibold flex items-center gap-4 text-sm sm:text-base ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`;
   toast.classList.remove('hidden');
   setTimeout(() => toast.classList.add('hidden'), 3000);
 }
 
-// Expose for global use
-window.addToCart = addToCart;
-window.showToast = showToast;
+export function updateCartBadge() {
+  const cart = getCart();
+  const count = cart.reduce((sum, item) => sum + item.qty, 0);
+  const badge = document.getElementById('cart-badge');
+  if (badge) badge.textContent = count;
+}

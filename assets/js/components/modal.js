@@ -1,19 +1,10 @@
-import { addToCart } from './cart.js';
+import { addToCart, showToast } from './cart.js';
 import { signIn, signUp, signInWithGoogle } from '../services/auth.js';
 import { getProductById } from '../services/firestore.js';
 import { formatCurrency } from '../utils/helpers.js';
 
-// ─── Toast ──────────────────────────────────────────────
-export function showToast(msg, type = 'success') {
-  const toast = document.getElementById('toast');
-  const msgEl = document.getElementById('toast-msg');
-  msgEl.textContent = msg;
-  toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] px-6 py-3 rounded-full shadow-xl font-semibold flex items-center gap-4 text-sm sm:text-base ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`;
-  toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 3000);
-}
+export { showToast };
 
-// ─── Auth Modal ──────────────────────────────────────────
 export function initModal() {
   const authModal = document.getElementById('auth-modal');
   const authClose = document.getElementById('auth-close');
@@ -82,7 +73,7 @@ export function initModal() {
     }
   });
 
-  // ─── Product Modal ─────────────────────────────────────
+  // Product Modal
   const productModal = document.getElementById('product-modal');
   document.getElementById('modal-close-btn').addEventListener('click', () => {
     productModal.style.display = 'none';
@@ -91,7 +82,7 @@ export function initModal() {
     if (e.target === productModal) productModal.style.display = 'none';
   });
 
-  // ─── Admin Modal ───────────────────────────────────────
+  // Admin Modal
   const adminModal = document.getElementById('admin-modal');
   document.getElementById('admin-modal-cancel').addEventListener('click', () => {
     adminModal.classList.remove('open');
@@ -101,7 +92,6 @@ export function initModal() {
   });
 }
 
-// ─── Open Product Detail Modal ──────────────────────────
 export async function openProductModal(productId) {
   const product = await getProductById(productId);
   if (!product) {

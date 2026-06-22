@@ -26,7 +26,7 @@ export async function updateSettings(data) {
   } catch (e) { handleError(e); }
 }
 
-// ---- HEROES (CACHED) ----
+// ---- HEROES ----
 export async function getHeroes() {
   const cached = getCached('heroes');
   if (cached) return cached;

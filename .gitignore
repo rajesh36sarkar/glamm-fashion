@@ -1,0 +1,225 @@
+# ================================================================
+# Glamm Fashion – .gitignore
+# Covers: Node.js, Firebase, Environment, IDE, OS, Build, Logs
+# ================================================================
+
+# ─── Node.js ──────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ─── Firebase ────────────────────────────────────────────────────
+# Firebase config (contains secrets – DO NOT COMMIT)
+assets/js/config/firebase.js
+
+# Firebase Cloud Functions environment variables
+functions/.env
+functions/.env.local
+functions/.env.*.local
+
+# Firebase service account keys (never commit)
+*.json
+!package.json
+!firebase.json
+!package-lock.json
+!tsconfig.json
+!compiled/**/*.json
+
+# Firebase deployment logs
+firebase-debug.log
+firebase-debug.*.log
+
+# Firebase emulator data
+firebase-emulator/
+.emulator/
+*.firebase
+
+# ─── Environment Variables ──────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+*.env
+
+# ─── Build / Output ──────────────────────────────────────────────
+dist/
+build/
+out/
+*.min.js
+*.min.css
+*.bundle.js
+*.chunk.js
+
+# ─── IDE / Editor ────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.iml
+.project
+.classpath
+.settings/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# ─── OS / System ─────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+*.tmp
+*.temp
+
+# ─── Logs ────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log*
+
+# ─── Testing / Coverage ──────────────────────────────────────────
+coverage/
+.nyc_output/
+*.test.js
+*.spec.js
+__tests__/
+__mocks__/
+
+# ─── Temporary Files ─────────────────────────────────────────────
+*.tmp
+*.temp
+*.cache
+*.swp
+*.swo
+*~
+
+# ─── Uploads / Media (local copies) ─────────────────────────────
+# Keep only sample/placeholder images, not user uploads
+assets/images/uploads/
+assets/images/products/
+assets/images/categories/
+assets/images/heroes/
+assets/images/temp/
+*.orig
+*.rej
+
+# ─── Documentation (build artifacts) ────────────────────────────
+docs/_build/
+docs/.build/
+*.pdf
+*.docx
+
+# ─── Dependency directories ──────────────────────────────────────
+jspm_packages/
+.bower_components/
+
+# ─── Optional npm cache directory ───────────────────────────────
+.npm
+
+# ─── Optional eslint cache ──────────────────────────────────────
+.eslintcache
+
+# ─── Optional REPL history ──────────────────────────────────────
+.node_repl_history
+
+# ─── Output of 'npm pack' ──────────────────────────────────────
+*.tgz
+
+# ─── Yarn Integrity file ────────────────────────────────────────
+.yarn-integrity
+
+# ─── dotenv environment variables file ─────────────────────────
+.env
+
+# ─── Next.js build output ──────────────────────────────────────
+.next/
+out/
+
+# ─── Nuxt.js build / generate output ──────────────────────────
+.nuxt/
+dist/
+
+# ─── Gatsby files ──────────────────────────────────────────────
+.cache/
+public/
+
+# ─── Storybook build output ────────────────────────────────────
+storybook-static/
+
+# ─── Angular build output ──────────────────────────────────────
+dist/
+tmp/
+out-tsc/
+
+# ─── Vue.js build output ──────────────────────────────────────
+dist/
+
+# ─── Svelte build output ──────────────────────────────────────
+public/build/
+
+# ─── PHP (if any) ──────────────────────────────────────────────
+*.log
+*.sql
+*.sqlite
+*.db
+*.db-journal
+*.bak
+
+# ─── Hostinger / cPanel specific ──────────────────────────────
+# These are usually not in repo, but just in case
+error_log
+access_log
+*.old
+*.orig
+*.save
+*.backup
+.cpanel/
+.htaccess.bak
+
+# ─── Miscellaneous ──────────────────────────────────────────────
+# Local Netlify folder
+.netlify/
+
+# Vercel
+.vercel/
+
+# Cloudflare
+.cloudflare/
+
+# Sentry config files
+.sentryclirc
+
+# Dependencies
+**/node_modules/
+**/bower_components/
+
+# Optional: Keep sample data but ignore real data
+assets/data/*.json
+!assets/data/sample.json
+
+# Keep placeholder images but ignore user-uploaded
+assets/images/products/**
+!assets/images/products/.gitkeep
+assets/images/categories/**
+!assets/images/categories/.gitkeep
+assets/images/heroes/**
+!assets/images/heroes/.gitkeep
+
+# Keep the placeholder but ignore everything else in images
+assets/images/uploads/
+assets/images/temp/

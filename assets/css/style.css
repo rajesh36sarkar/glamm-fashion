@@ -1,4 +1,3 @@
-/* Tailwind overrides & custom animations */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Lato:wght@300;400;700&display=swap');
 
 body {
@@ -9,19 +8,16 @@ body {
   font-family: 'Playfair Display', serif;
 }
 
-/* Preloader */
 #preloader.hidden {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 }
 
-/* Toast */
 .toast.show {
   display: flex !important;
 }
 
-/* Auth forms */
 .auth-form.active {
   display: block !important;
 }
@@ -29,7 +25,6 @@ body {
   display: none !important;
 }
 
-/* Cart sidebar */
 #cart-sidebar.translate-x-full {
   transform: translateX(100%);
 }
@@ -37,7 +32,6 @@ body {
   transform: translateX(0);
 }
 
-/* Search modal */
 #search-modal.open {
   display: flex !important;
 }
@@ -48,21 +42,25 @@ body {
   transform: scale(1);
 }
 
-/* Product modal */
 #product-modal.open {
   display: flex !important;
 }
-
-/* Admin modal */
 #admin-modal.open {
   display: flex !important;
 }
 
-/* Misc */
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 @keyframes pulse {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

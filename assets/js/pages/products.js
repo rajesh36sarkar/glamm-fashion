@@ -7,34 +7,54 @@ export async function renderProducts() {
   const categoryId = urlParams.get('category');
   const searchQuery = urlParams.get('search');
 
-  const categories = await getCategories();
-  let products = await getProducts();
-
-  if (categoryId) {
-    products = products.filter(p => p.categoryId === categoryId); // use categoryId
-  }
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    products = products.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
-  }
-
+  // Show skeleton loading
   container.innerHTML = `
     <div class="page-header">
       <h1>Our Collection</h1>
       <p>Discover our premium jewellery</p>
     </div>
+    <div class="product-filters skeleton-filters"></div>
+    <div class="product-grid skeleton-grid">
+      ${Array(6).fill(0).map(() => `
+        <div class="product-card skeleton">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-text"></div>
+          <div class="skeleton-text short"></div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Fetch data
+  const [categories, products] = await Promise.all([getCategories(), getProducts()]);
+
+  let filtered = products;
+  if (categoryId) {
+    filtered = filtered.filter(p => p.categoryId === categoryId);
+  }
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+  }
+
+  // Render actual content
+  container.innerHTML = `
+    <div class="page-header animate-fade-up">
+      <h1>Our Collection</h1>
+      <p>Discover our premium jewellery</p>
+    </div>
     <section class="products-section">
-      <div class="product-filters" id="products-filter-buttons">
+      <div class="product-filters animate-fade-up" style="animation-delay:0.1s;" id="products-filter-buttons">
         <button class="filter-btn active" data-filter="all">All</button>
         ${categories.map(cat => `<button class="filter-btn" data-filter="${cat.id}">${cat.name}</button>`).join('')}
       </div>
-      <div class="product-grid" id="products-product-grid">
-        ${products.map(p => createProductCard(p)).join('')}
+      <div class="product-grid animate-fade-up" style="animation-delay:0.2s;" id="products-product-grid">
+        ${filtered.length ? filtered.map(p => createProductCard(p)).join('') : `<p class="no-products">No products found.</p>`}
       </div>
     </section>
   `;
 
-  // Filter
+  // ─── Filter logic ───
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const filter = this.dataset.filter;
@@ -52,8 +72,15 @@ export async function renderProducts() {
   });
 
   attachProductEvents();
+
+  // ─── Trigger fade-in animation after render ───
+  document.querySelectorAll('.animate-fade-up').forEach((el, i) => {
+    el.style.animationDelay = `${i * 0.1}s`;
+    el.classList.add('visible');
+  });
 }
 
+// ─── Create Product Card ───
 function createProductCard(product) {
   const hasOld = product.oldPrice && product.oldPrice > 0;
   const discount = hasOld ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
@@ -101,6 +128,7 @@ function createProductCard(product) {
   `;
 }
 
+// ─── Attach events ───
 function attachProductEvents() {
   document.querySelectorAll('.btn-add-cart').forEach(btn => {
     btn.addEventListener('click', function(e) {
@@ -127,8 +155,7 @@ function attachProductEvents() {
       icon.classList.toggle('fa-solid');
       icon.style.color = icon.classList.contains('fa-solid') ? '#e74c3c' : '';
       if (icon.classList.contains('fa-solid')) {
-        const { trackLike } = import('../services/analytics.js');
-        trackLike(this.dataset.id);
+        import('../services/analytics.js').then(({ trackLike }) => trackLike(this.dataset.id));
       }
     });
   });

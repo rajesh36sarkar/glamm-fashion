@@ -11,7 +11,6 @@ import { getImageUrl } from '../utils/helpers.js';
 
 let products = [], categories = [], orders = [], contacts = [], users = [], heroes = [], analytics = [], settings = {};
 
-// ─── Chart instances (to destroy before re‑rendering) ───
 let revenueChartInstance = null;
 let statusChartInstance = null;
 
@@ -29,7 +28,6 @@ export async function renderAdmin() {
     return;
   }
 
-  // Check admin role
   try {
     const userData = await getUserById(user.uid);
     if (!userData || userData.role !== 'admin') {
@@ -52,7 +50,6 @@ export async function renderAdmin() {
     return;
   }
 
-  // Load data
   try {
     [products, categories, orders, contacts, users, heroes, analytics, settings] = await Promise.all([
       getProducts(), getCategories(), getOrders(), getContacts(), getUsers(), getHeroes(), getAnalytics(), getSettings()
@@ -63,21 +60,22 @@ export async function renderAdmin() {
     return;
   }
 
-  // ─── Destroy old chart instances before re‑rendering ───
-  if (revenueChartInstance) {
-    revenueChartInstance.destroy();
-    revenueChartInstance = null;
-  }
-  if (statusChartInstance) {
-    statusChartInstance.destroy();
-    statusChartInstance = null;
-  }
+  if (revenueChartInstance) { revenueChartInstance.destroy(); revenueChartInstance = null; }
+  if (statusChartInstance) { statusChartInstance.destroy(); statusChartInstance = null; }
 
-  // Render UI
   container.innerHTML = `
     <div id="admin-page">
+      <div class="mobile-admin-header">
+        <div class="mobile-logo"><i class="fa-solid fa-shield-halved"></i> Admin Management</div>
+        <button id="mobile-menu-btn" aria-label="Toggle Menu"><i class="fa-solid fa-bars"></i></button>
+      </div>
+      
+      <div class="admin-sidebar-overlay" id="admin-sidebar-overlay"></div>
+
       <div class="admin-wrapper">
-        <aside class="admin-sidebar">
+        <aside class="admin-sidebar" id="admin-sidebar">
+          <div class="sidebar-brand hidden-mobile"><i class="fa-solid fa-shield-halved"></i> Admin Panel</div>
+          <button class="sidebar-close" id="sidebar-close" aria-label="Close Sidebar"><i class="fa-solid fa-xmark"></i></button>
           <div class="nav-item active-admin-tab" data-admin-tab="dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</div>
           <div class="nav-item" data-admin-tab="products"><i class="fa-solid fa-gem"></i> Products</div>
           <div class="nav-item" data-admin-tab="categories"><i class="fa-solid fa-tags"></i> Categories</div>
@@ -87,6 +85,7 @@ export async function renderAdmin() {
           <div class="nav-item" data-admin-tab="users"><i class="fa-solid fa-users"></i> Users</div>
           <div class="nav-item" data-admin-tab="settings"><i class="fa-solid fa-gear"></i> Settings</div>
         </aside>
+        
         <div class="admin-content">
           <div id="admin-panel-dashboard" class="panel active">${renderDashboard()}</div>
           <div id="admin-panel-products" class="panel">${renderProductsPanel()}</div>
@@ -101,12 +100,11 @@ export async function renderAdmin() {
     </div>
   `;
 
-  // ─── Attach events ───
   attachAdminEvents();
   initCharts();
 }
 
-// ─── Render functions (unchanged) ───
+// ─── Render functions ───
 function renderDashboard() {
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
   return `
@@ -116,9 +114,9 @@ function renderDashboard() {
       <div class="stat-card"><div class="stat-number">₹${totalRevenue}</div><div class="stat-label">Revenue</div></div>
       <div class="stat-card"><div class="stat-number">${users.length}</div><div class="stat-label">Users</div></div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:20px;margin-top:20px;">
-      <div style="flex:1;min-width:300px;"><canvas id="revenueChart" height="200"></canvas></div>
-      <div style="flex:1;min-width:300px;"><canvas id="orderStatusChart" height="200"></canvas></div>
+    <div class="charts-row">
+      <div class="chart-wrapper"><canvas id="revenueChart" height="200"></canvas></div>
+      <div class="chart-wrapper"><canvas id="orderStatusChart" height="200"></canvas></div>
     </div>
   `;
 }
@@ -131,7 +129,7 @@ function renderProductsPanel() {
       <tbody>
         ${products.map(p => `
           <tr>
-            <td><img src="${getImageUrl(p.imageUrl)}" class="product-thumb"></td>
+            <td><img src="${getImageUrl(p.imageUrl)}" class="product-thumb" alt=""></td>
             <td>${p.name}</td>
             <td>${p.category}</td>
             <td>₹${p.price}</td>
@@ -151,7 +149,7 @@ function renderCategoriesPanel() {
       <tbody>
         ${categories.map(c => `
           <tr>
-            <td><img src="${getImageUrl(c.imageUrl)}" class="product-thumb"></td>
+            <td><img src="${getImageUrl(c.imageUrl)}" class="product-thumb" alt=""></td>
             <td>${c.name}</td>
             <td><button class="edit-category" data-id="${c.id}">Edit</button> <button class="delete-category" data-id="${c.id}" data-image="${c.imageUrl}">Delete</button></td>
           </tr>
@@ -170,7 +168,7 @@ function renderHeroesPanel() {
         ${heroes.map(h => `
           <tr>
             <td>${h.page}</td>
-            <td><img src="${getImageUrl(h.imageUrl)}" class="product-thumb"></td>
+            <td><img src="${getImageUrl(h.imageUrl)}" class="product-thumb" alt=""></td>
             <td><button class="edit-hero" data-id="${h.id}">Edit</button> <button class="delete-hero" data-id="${h.id}" data-image="${h.imageUrl}">Delete</button></td>
           </tr>
         `).join('')}
@@ -258,9 +256,51 @@ function attachAdminEvents() {
   const adminContainer = document.getElementById('admin-page');
   if (!adminContainer) return;
 
-  // Tab switching
+  const sidebar = document.getElementById('admin-sidebar');
+  const overlay = document.getElementById('admin-sidebar-overlay');
+  const mobileBtn = document.getElementById('mobile-menu-btn');
+  const closeBtn = document.getElementById('sidebar-close');
+
+  // Get the icon inside the mobile button
+  const mobileIcon = mobileBtn ? mobileBtn.querySelector('i') : null;
+
+  // ─── Close sidebar function (updates icon) ───
+  const closeMobileMenu = () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+    if (mobileIcon) {
+      mobileIcon.className = 'fa-solid fa-bars';
+      mobileBtn.setAttribute('aria-label', 'Open Menu');
+    }
+  };
+
+  // ─── Toggle sidebar function (toggles icon) ───
+  const toggleMobileMenu = () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+    if (mobileIcon) {
+      if (sidebar.classList.contains('open')) {
+        mobileIcon.className = 'fa-solid fa-xmark';
+        mobileBtn.setAttribute('aria-label', 'Close Sidebar');
+      } else {
+        mobileIcon.className = 'fa-solid fa-bars';
+        mobileBtn.setAttribute('aria-label', 'Open Menu');
+      }
+    }
+  };
+
+  // ─── Event Listeners ───
+  if (mobileBtn) mobileBtn.addEventListener('click', toggleMobileMenu);
+  if (closeBtn) closeBtn.addEventListener('click', closeMobileMenu);
+  if (overlay) overlay.addEventListener('click', closeMobileMenu);
+
+  // ─── Tab switching ───
   adminContainer.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', function() {
+      // Close mobile sidebar if open
+      if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+        closeMobileMenu();
+      }
       adminContainer.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-admin-tab'));
       this.classList.add('active-admin-tab');
       const tab = this.dataset.adminTab;
@@ -270,7 +310,14 @@ function attachAdminEvents() {
     });
   });
 
-  // Product CRUD
+  // ─── Close sidebar on window resize to desktop ───
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768 && sidebar.classList.contains('open')) {
+      closeMobileMenu();
+    }
+  });
+
+  // ─── Product CRUD ───
   const addProductBtn = document.getElementById('add-product-btn');
   if (addProductBtn) addProductBtn.addEventListener('click', () => openAdminModal('product'));
 
@@ -291,7 +338,7 @@ function attachAdminEvents() {
     });
   });
 
-  // Category CRUD
+  // ─── Category CRUD ───
   const addCategoryBtn = document.getElementById('add-category-btn');
   if (addCategoryBtn) addCategoryBtn.addEventListener('click', () => openAdminModal('category'));
 
@@ -312,7 +359,7 @@ function attachAdminEvents() {
     });
   });
 
-  // Hero CRUD
+  // ─── Hero CRUD ───
   const addHeroBtn = document.getElementById('add-hero-btn');
   if (addHeroBtn) addHeroBtn.addEventListener('click', () => openAdminModal('hero'));
 
@@ -333,7 +380,7 @@ function attachAdminEvents() {
     });
   });
 
-  // Order status update
+  // ─── Order status update ───
   document.querySelectorAll('.order-status').forEach(select => {
     select.addEventListener('change', async function() {
       const id = this.dataset.id;
@@ -365,7 +412,7 @@ function attachAdminEvents() {
     });
   });
 
-  // Contacts
+  // ─── Contacts ───
   document.querySelectorAll('.reply-contact').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
@@ -386,7 +433,7 @@ function attachAdminEvents() {
     });
   });
 
-  // Settings
+  // ─── Settings Form ───
   const settingsForm = document.getElementById('settings-form');
   if (settingsForm) {
     settingsForm.addEventListener('submit', async function(e) {
@@ -403,7 +450,7 @@ function attachAdminEvents() {
     });
   }
 
-  // Admin Modal Form
+  // ─── Admin Modal Form ───
   const modalForm = document.getElementById('admin-modal-form');
   if (modalForm) {
     modalForm.addEventListener('submit', async function(e) {
@@ -484,16 +531,12 @@ async function reloadAdminPanel() {
   await renderAdmin();
 }
 
-// ─── Init Charts (with instance management) ───
+// ─── Init Charts ───
 function initCharts() {
   setTimeout(() => {
     const revenueCtx = document.getElementById('revenueChart');
     if (revenueCtx && typeof Chart !== 'undefined') {
-      // Destroy existing instance if any
-      if (revenueChartInstance) {
-        revenueChartInstance.destroy();
-        revenueChartInstance = null;
-      }
+      if (revenueChartInstance) { revenueChartInstance.destroy(); revenueChartInstance = null; }
       revenueChartInstance = new Chart(revenueCtx, {
         type: 'line',
         data: {
@@ -502,19 +545,18 @@ function initCharts() {
             label: 'Revenue (₹)',
             data: [12000, 19000, 15000, 22000, 28000, 35000],
             borderColor: '#7B113A',
-            tension: 0.4
+            backgroundColor: 'rgba(123, 17, 58, 0.05)',
+            tension: 0.4,
+            fill: true
           }]
         },
-        options: { responsive: true }
+        options: { responsive: true, maintainAspectRatio: false }
       });
     }
 
     const statusCtx = document.getElementById('orderStatusChart');
     if (statusCtx && typeof Chart !== 'undefined') {
-      if (statusChartInstance) {
-        statusChartInstance.destroy();
-        statusChartInstance = null;
-      }
+      if (statusChartInstance) { statusChartInstance.destroy(); statusChartInstance = null; }
       const statusCounts = { pending:0, processing:0, shipped:0, delivered:0, cancelled:0 };
       orders.forEach(o => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1; });
       statusChartInstance = new Chart(statusCtx, {
@@ -526,7 +568,7 @@ function initCharts() {
             backgroundColor: ['#f39c12', '#3498db', '#2ecc71', '#27ae60', '#e74c3c']
           }]
         },
-        options: { responsive: true }
+        options: { responsive: true, maintainAspectRatio: false }
       });
     }
   }, 300);

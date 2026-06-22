@@ -334,3 +334,92 @@ footer {
   display: block;
   margin-bottom: 20px;
 }
+
+
+/* =========================================
+   Category Bar – Scrollable Buttons
+========================================= */
+
+.category-bar {
+  background: #f5f0eb;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 8px 5%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  /* Snap scroll for mobile */
+  scroll-snap-type: x mandatory;
+}
+
+.category-bar::-webkit-scrollbar {
+  height: 4px;
+}
+.category-bar::-webkit-scrollbar-track {
+  background: #e0dcd8;
+}
+.category-bar::-webkit-scrollbar-thumb {
+  background: var(--accent-gold);
+  border-radius: 4px;
+}
+
+.category-bar-inner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.category-link {
+  display: inline-block;
+  padding: 8px 22px;
+  background: #fff;
+  color: var(--text-dark);
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid #ddd;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.category-link:hover {
+  background: var(--primary-maroon);
+  color: #fff;
+  border-color: var(--primary-maroon);
+  transform: scale(1.02);
+}
+
+.category-link:active {
+  transform: scale(0.96);
+}
+
+.no-categories {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+/* --- Mobile adjustments --- */
+@media (max-width: 768px) {
+  .category-bar {
+    padding: 8px 12px;
+    /* Ensure smooth scrolling with snap */
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .category-link {
+    padding: 6px 16px;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+}

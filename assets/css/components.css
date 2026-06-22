@@ -642,3 +642,75 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+/* =========================================
+   Auth Modal – Enhanced & Responsive
+========================================= */
+
+/* --- Modal animation --- */
+.auth-modal-overlay {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.auth-modal-overlay.open {
+  opacity: 1;
+  display: flex;
+}
+.auth-modal-box {
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  opacity: 0;
+}
+.auth-modal-overlay.open .auth-modal-box {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* --- Error messages --- */
+.auth-error-container {
+  min-height: 24px;
+  margin-top: 8px;
+}
+.auth-error {
+  display: block;
+  padding: 8px 12px;
+  background: #fde8e8;
+  color: #c53030;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: shake 0.4s ease;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+/* --- Loading state on buttons --- */
+.auth-btn:disabled,
+.auth-google-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* --- Responsive tweaks --- */
+@media (max-width: 480px) {
+  .auth-modal-box {
+    padding: 24px 20px;
+    max-width: 95%;
+    border-radius: 12px;
+  }
+  .auth-form h3 {
+    font-size: 1.5rem;
+  }
+  .auth-form .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .auth-close {
+    top: 8px;
+    right: 12px;
+    font-size: 1.2rem;
+  }
+}

@@ -9,6 +9,7 @@ export async function renderHeader() {
   const placeholder = document.getElementById('header-placeholder');
   const categories = await getCategories();
 
+  // Build category buttons (filter active categories)
   let categoryLinks = categories
     .filter(cat => cat.isActive !== false)
     .map(cat => `
@@ -17,14 +18,6 @@ export async function renderHeader() {
     .join('');
 
   placeholder.innerHTML = `
-    <div class="top-bar" id="preheader">
-      <div class="top-bar-center">
-        <div class="marquee-wrapper">
-          <span class="marquee-item">✨ Free Shipping above ₹599 | 5% OFF on Prepaid Orders | Call: +91 9481605367</span>
-          <span class="marquee-item">✨ Free Shipping above ₹599 | 5% OFF on Prepaid Orders | Call: +91 9481605367</span>
-        </div>
-      </div>
-    </div>
     <header class="main-header">
       <div class="logo header-logo">
         <a href="#" onclick="window.navigateTo('home'); return false;">
@@ -52,14 +45,16 @@ export async function renderHeader() {
         <a href="#" class="mobile-toggle" id="mobile-menu-btn"><i class="fa-solid fa-bars"></i></a>
       </div>
     </header>
+
+    <!-- Category Bar (scrollable on mobile) -->
     <div class="category-bar" id="category-bar">
       <div class="category-bar-inner">
-        ${categoryLinks}
+        ${categoryLinks || '<span class="no-categories">No categories yet</span>'}
       </div>
     </div>
   `;
 
-  // Category links
+  // ─── Category links: navigate to filtered products ───
   document.querySelectorAll('.category-link').forEach(link => {
     link.addEventListener('click', function(e) {
       e.preventDefault();
@@ -67,7 +62,7 @@ export async function renderHeader() {
     });
   });
 
-  // Auth toggle
+  // ─── Auth toggle ───
   document.getElementById('auth-toggle').addEventListener('click', (e) => {
     e.preventDefault();
     if (getCurrentUser()) {
@@ -79,13 +74,13 @@ export async function renderHeader() {
     }
   });
 
-  // Mobile menu toggle
+  // ─── Mobile menu toggle ───
   document.getElementById('mobile-menu-btn').addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('main-nav').classList.toggle('active');
   });
 
-  // Close mobile menu on any nav link click
+  // ─── Close mobile menu on nav link click ───
   document.querySelectorAll('#main-nav a').forEach(link => {
     link.addEventListener('click', () => {
       document.getElementById('main-nav').classList.remove('active');
